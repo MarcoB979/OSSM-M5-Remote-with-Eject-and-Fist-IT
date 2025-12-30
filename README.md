@@ -1,5 +1,4 @@
 # Project OSSM M5 REMOTE
-## Overview of the OSSM-M5-Remote
 
 ## Added in this version:
 ## EJECT Cumpump control
