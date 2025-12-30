@@ -9,6 +9,8 @@ For Eject cumpump: Long press left button
 For Fist-IT: Long press right button
 
 
+## Original Readme:
+
 A Remote Control Platform for all ESP Controlled Sex Toys,with a focus on the [OSSM](https://github.com/KinkyMakers/OSSM-hardware) and related toys.
 
 ![Final Addon](image/remote.png?raw=true "Remote" )
