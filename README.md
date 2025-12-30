@@ -1,10 +1,9 @@
 # Project OSSM M5 REMOTE
 ## Overview of the OSSM-M5-Remote
 
-##Below original readme
-##Added in this version:
-###Eject cumpump control
-###Fist-IT Control
+## Added in this version:
+## EJECT Cumpump control
+## Fist-IT Control
 
 For Eject cumpump: Long press left button
 For Fist-IT: Long press right button
