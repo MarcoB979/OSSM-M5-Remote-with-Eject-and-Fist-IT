@@ -1,6 +1,15 @@
 # Project OSSM M5 REMOTE
 ## Overview of the OSSM-M5-Remote
 
+##Below original readme
+##Added in this version:
+###Eject cumpump control
+###Fist-IT Control
+
+For Eject cumpump: Long press left button
+For Fist-IT: Long press right button
+
+
 A Remote Control Platform for all ESP Controlled Sex Toys,with a focus on the [OSSM](https://github.com/KinkyMakers/OSSM-hardware) and related toys.
 
 ![Final Addon](image/remote.png?raw=true "Remote" )
