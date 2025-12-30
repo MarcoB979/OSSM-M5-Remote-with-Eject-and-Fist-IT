@@ -30,9 +30,11 @@ Supported in this version of the M5 remote:
 
 | OSSM Machine | https://github.com/KinkyMakers/OSSM-hardware |
 
-## Not Supported sex toys in this version
+## NEW SUPPORT ADDED in this version:
 
-| EJECT | https://github.com/ortlof/EJECT-cum-tube-project | [A Work in Progress]
+| EJECT |  | [A Work in Progress]
+Forked from https://github.com/ortlof/EJECT-cum-tube-project
+| Fist-IT | https://github.com/MarcoB979/Fist-IT | [A Work in Progress]
 
 
 
