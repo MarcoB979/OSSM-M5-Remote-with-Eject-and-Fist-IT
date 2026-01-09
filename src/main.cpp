@@ -15,6 +15,8 @@
 #include "main.h"
 #include <esp_wifi.h>
 #include "Preferences.h"      //EEPROM replacement function
+#include "language.h"
+
 #ifndef LV_CONF_INCLUDE_SIMPLE
 #define LV_CONF_INCLUDE_SIMPLE
 #endif
@@ -25,19 +27,6 @@
 constexpr int32_t HOR_RES=320;
 constexpr int32_t VER_RES=240;
 
-/*
-constexpr char WIFI_SSID[] = "Bechthum";
-int32_t getWiFiChannel(const char *ssid) {
-  if (int32_t n = WiFi.scanNetworks()) {
-      for (uint8_t i=0; i<n; i++) {
-          if (strcmp(ssid, WiFi.SSID(i).c_str())==0) {
-              return WiFi.channel(i);
-          }
-      }
-  }
-  return 0;
-}
-*/
 
 
 ///////////////////////////////////////////
@@ -273,9 +262,6 @@ uint8_t EJECT_Address[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // Broadcast to 
 uint8_t FIST_IT_Address[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // Broadcast to all ESP32s, upon connection gets updated to the actual address
 uint8_t OSSM_Address[] = {0xC0, 0x5D, 0x89, 0xB3, 0xDA, 0xFC}; // Broadcast to all ESP32s, upon connection gets updated to the actual address
 
-//uint8_t EJECT_Address[] = {0xA8, 0x42, 0xE3, 0x5B, 0xC0, 0x28}; // Broadcast to all ESP32s, upon connection gets updated to the actual address
-//uint8_t OLDFIST_IT_Address[] = {0x94, 0x54, 0xC5, 0x76, 0xF2, 0xD0}; // Broadcast to all ESP32s, upon connection gets updated to the actual address
-//uint8_t FIST_IT_Address[] = {0xA0, 0x85, 0xE3, 0x19, 0xA7, 0x78}; // Broadcast to all ESP32s, upon connection gets updated to the actual address
 #define HEARTBEAT_INTERVAL 5000/portTICK_PERIOD_MS	// 5 seconds
 
 // Bool
@@ -289,10 +275,7 @@ bool FIST_On = false;
 // Tasks:
 
 TaskHandle_t eRemote_t  = nullptr;  // Esp Now Remote Task
-//TaskHandle_t eRemote_t_EJECT  = nullptr;  // Esp Now Remote Task
-
 void espNowRemoteTask(void *pvParameters); // Handels the EspNow Remote
-//void espNowRemoteTaskEject(void *pvParameters); // Handels the EspNow Remote
 
 bool connectbtn(); //Handels Connectbtn
 
@@ -420,7 +403,6 @@ if (!outgoingcontrol.esp_command==99){
 }
 }
 
-
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
  //CheckAllPeers();
   memcpy(&incomingcontrol, incomingData, sizeof(incomingcontrol));
@@ -473,25 +455,25 @@ LogDebug(incomingcontrol.esp_sender);
 void HandleReceivedOSSM(const uint8_t * mac, const uint8_t *incomingData, int len){
 
     memcpy(&incomingcontrol, incomingData, sizeof(incomingcontrol));
-    LogDebug("HANDLE RECEIVED OSSM to target ID: ");
-    LogDebug(incomingcontrol.esp_target);
-    LogDebug(" from sender ");
-  LogDebug(incomingcontrol.esp_sender);
+    LogDebugPRIO("HANDLE RECEIVED OSSM to target ID: ");
+    LogDebugPRIO(incomingcontrol.esp_target);
+    LogDebugPRIO(" from sender ");
+  LogDebugPRIO(incomingcontrol.esp_sender);
 if(incomingcontrol.esp_sender==OSSM_ID)  {
-  LogDebug("Received from OSSM");
-  LogDebug("Received Command: ");
-    LogDebug(incomingcontrol.esp_command);
-    LogDebug("Received value: ");
-    LogDebug(incomingcontrol.esp_value);
-    LogDebug("Received to target ID: ");
-    LogDebug(incomingcontrol.esp_target);
-    LogDebug("Received from sender: ");
-    LogDebug(incomingcontrol.esp_sender);
-    LogDebugFormatted("from MAC addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  LogDebugPRIO("Received from OSSM");
+  LogDebugPRIO("Received Command: ");
+    LogDebugPRIO(incomingcontrol.esp_command);
+    LogDebugPRIO("Received value: ");
+    LogDebugPRIO(incomingcontrol.esp_value);
+    LogDebugPRIO("Received to target ID: ");
+    LogDebugPRIO(incomingcontrol.esp_target);
+    LogDebugPRIO("Received from sender: ");
+    LogDebugPRIO(incomingcontrol.esp_sender);
+    LogDebugFormattedPRIO("from MAC addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if(!Ossm_paired){
-      LogDebug("OSSM is not paired");}
+      LogDebugPRIO("OSSM is not paired");}
     else{
-      LogDebugFormatted("OSSM paired and ready. OSSM Remote addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", OSSM_Address[0], OSSM_Address[1], OSSM_Address[2], OSSM_Address[3], OSSM_Address[4], OSSM_Address[5]);
+      LogDebugFormattedPRIO("OSSM paired and ready. OSSM Remote addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", OSSM_Address[0], OSSM_Address[1], OSSM_Address[2], OSSM_Address[3], OSSM_Address[4], OSSM_Address[5]);
     }
     
     if(incomingcontrol.esp_target == M5_ID  && 
@@ -508,15 +490,15 @@ if(incomingcontrol.esp_sender==OSSM_ID)  {
         // Add the new peer
         memcpy(peerInfo.peer_addr, OSSM_Address, 6);
         if (esp_now_add_peer(&peerInfo) == ESP_OK) {
-          LogDebugFormatted("New peer added successfully, OSSM addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", OSSM_Address[0], OSSM_Address[1], OSSM_Address[2], OSSM_Address[3], OSSM_Address[4], OSSM_Address[5]);
+          LogDebugFormattedPRIO("New peer added successfully, OSSM addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", OSSM_Address[0], OSSM_Address[1], OSSM_Address[2], OSSM_Address[3], OSSM_Address[4], OSSM_Address[5]);
           Ossm_paired = true;
         }
         else {
-          LogDebug("Failed to add new peer");
+          LogDebugPRIO("Failed to add OSSM as new peer");
         }
       }
       else {
-        LogDebug("Failed to remove peer");
+        LogDebugPRIO("Failed to remove peer");
       }
   
       if(incomingcontrol.esp_speed > speedlimit){
@@ -630,6 +612,7 @@ if(incomingcontrol.esp_sender==EJECT_ID){
   case OFF: 
   {
     EJECT_On = false;
+    lv_label_set_text(ui_EJECTButtonLText, "Start");
     lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);  
   }
   break;
@@ -717,7 +700,7 @@ void HandleReceivedFist_IT(const uint8_t * mac, const uint8_t *incomingData, int
     case OFF: 
     {
       FIST_On = false;
-      lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);  
+      //lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);  
     }
     break;
     case ON:
@@ -741,7 +724,7 @@ void setup(){
 
   //****Load EEPROOM:
   eject_status = EEPROM.readBool(EJECT);
-  Fist_IT_status = true; //EEPROM.readBool(FIST);
+  Fist_IT_status = EEPROM.readBool(FIST);
   dark_mode = EEPROM.readBool(DARKMODE);
   vibrate_mode = EEPROM.readBool(VIBRATE);
   touch_home = EEPROM.readBool(LEFTY);
@@ -755,7 +738,7 @@ Serial.begin(115200);
     // Loads these settings at boot
     eject_status = m5prf.getBool("ejectAddon", false); //boolean here is used if key does not exist yet
     dark_mode = m5prf.getBool("Darkmode", true);       // ^ (basically first boot defaults, saving settings surives a re-flash!)
-    Fist_IT_status = true; m5prf.getBool("Darkmode", false);
+    Fist_IT_status = m5prf.getBool("Fist-ITAddon", false);
     vibrate_mode = m5prf.getBool("Vibrate", true);
     touch_home= m5prf.getBool("Lefty", false);       // = touchcreen. There apears to be no actual lefthanded mode anywhere
   m5prf.end();
@@ -776,14 +759,14 @@ Serial.begin(115200);
 
   int32_t channel = 1; // getWiFiChannel(WIFI_SSID);
 
-  Serial.print("WiFi Channel before: ");
-  WiFi.printDiag(Serial); // Uncomment to verify channel number before
+  Serial.print("WiFi Channel before: " + WiFi.channel());
+  //WiFi.printDiag(Serial); // Uncomment to verify channel number before
   esp_wifi_set_promiscuous(true);
 //  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
   esp_wifi_set_promiscuous(false);
-  Serial.print("WiFi Channel after: ");
-  WiFi.printDiag(Serial); // Uncomment to verify channel change after
+  Serial.print("WiFi Channel after: " + WiFi.channel());
+  //WiFi.printDiag(Serial); // Uncomment to verify channel change after
   
   LogDebug(WiFi.macAddress());
   LogDebug("");
@@ -918,128 +901,6 @@ Serial.begin(115200);
 
 }
 
-void OnDataRecvOLD(const uint8_t * mac, const uint8_t *incomingData, int len) {
-memcpy(&incomingcontrol, incomingData, sizeof(incomingcontrol));
-LogDebugFormatted("Incoming message from MAC addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-if(esp_now_is_peer_exist(mac) and mac != DEFAULT_Address){
-  LogDebug("This MAC is added in the peers list");
-}
-else{
-//  if(mac == DEFAULT_Address){
-//    LogDebug("Sender is not registered with valid MAC address yet");
-//  }
-//  else{
-    LogDebug("Sender is not yet in the peers list");
-      // Add the new peer
-      memcpy(peerInfo.peer_addr, mac, 6);
-     esp_err_t result = esp_now_add_peer(&peerInfo);
-      if (result == ESP_OK) {
-        LogDebugFormatted("This is now fixed. MAC addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-        switch(incomingcontrol.esp_sender){
-          case OSSM_ID:
-            Ossm_paired=true;
-            case EJECT_ID:
-            Eject_paired=true;
-            case FIST_ID:
-            Fist_IT_paired=true;
-        }
-          
-      }
-      else {
-        LogDebug("Failed to add new peer");
-      }
-  //}
-  }
-
-  LogDebug("STD MSG - Received from: ");
-  LogDebug("  Sender: ");
-  LogDebug(incomingcontrol.esp_sender);
-  LogDebug("  Target: ");
-  LogDebug(incomingcontrol.esp_target);
-  LogDebug("  Command: ");
-  LogDebug(incomingcontrol.esp_command);
-  LogDebug("  Value: ");
-  LogDebug(incomingcontrol.esp_command);
-  LogDebugFormatted("MAC addresss : %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-
-
-  if(incomingcontrol.esp_sender==OSSM_ID){
-    LogDebug("Received OSSM");
-    ConnectToOSSM(mac);
-    if(incomingcontrol.esp_sender==OSSM_ID){
-      LogDebug("OSSM handle command");
-      switch(incomingcontrol.esp_command)
-      {
-      case OFF: 
-      {
-      OSSM_On = false;
-      }
-      break;
-      case ON:
-      {
-      OSSM_On = true;
-      }
-      }
-    }
-  return;
-  }
-
-//if not sender is ossm, look further
-else{
-  if(incomingcontrol.esp_sender==EJECT_ID){
-    LogDebug("Recieved Eject");
-    ConnectToEject(mac);
-    LogDebug("Eject paired: ");
-  LogDebug(Eject_paired);
-
-  if(incomingcontrol.esp_sender==EJECT_ID){
-    LogDebug("Eject handle command");
-    switch(incomingcontrol.esp_command)
-    {
-    case OFF: 
-    {
-      EJECT_On = false;
-      lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);  
-    }
-    break;
-    case ON:
-    {
-    //continue ejectcreampie;
-    }
-    }
-  }
-  }
-  //if not sender is ossm, look further
-else{
-  if(incomingcontrol.esp_sender==FIST_ID){
-    LogDebug("Recieved Fist-IT");
-    ConnectToFist_IT(mac);
-    LogDebug("Fist-IT paired: ");
-  LogDebug(Fist_IT_paired);
-
-  if(incomingcontrol.esp_sender==FIST_ID){
-    LogDebug("Fist-IT handle command");
-    switch(incomingcontrol.esp_command)
-    {
-    case OFF: 
-    {
-      FIST_On = false;
-      lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);  
-    }
-    break;
-    case ON:
-    {
-    //continue Fist-IT;
-    }
-    }
-  }
-  }
-  return;
-}
-}
-}
-
 //Sends Commands and Value to Remote device returns ture or false if sended
 bool SendCommand(int Command, float Value, int Target){
     //  StatusMessageOut();
@@ -1068,10 +929,11 @@ if(Target == OSSM_ID){
       LogDebug("Sending to ossm was successfull");
     } 
     else {
-      delay(200);
-      outgoingcontrol.esp_target = OSSM_ID;
-      esp_err_t result = esp_now_send(OSSM_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
-//      LogDebug("Send to OSSM - step 4");
+      // Fail fast without retry to avoid blocking UI thread
+      LogDebug("Sending to OSSM failed");
+      // Retry commented out to prevent watchdog timeout - uncomment if needed
+      //outgoingcontrol.esp_target = OSSM_ID;
+      //esp_err_t result = esp_now_send(OSSM_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
       return false;
     }
   }
@@ -1143,19 +1005,22 @@ LogDebug("Send to Eject - step 1");
           return true;
     } 
     else {
-      delay(20);
-      outgoingcontrol.esp_target = EJECT_ID;
-      esp_err_t result = esp_now_send(EJECT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
+      // Fail fast without retry to avoid blocking UI thread
       LogDebug("Sending to eject failed");
+      // Retry commented out to prevent watchdog timeout - uncomment if needed
+      //outgoingcontrol.esp_target = EJECT_ID;
+      //esp_err_t result = esp_now_send(EJECT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
       return false;
     }
 
   }
   else{
-    delay(200);
-    LogDebug("Eject was not paired");
+    // Heartbeat removed from UI loop to prevent watchdog timeout
+    // Background task (espNowRemoteTask) handles heartbeats every 5 seconds
+    LogDebug("Eject was not paired - heartbeat handled by background task");
     //CheckAllPeers();
 
+    /* HEARTBEAT COMMENTED OUT - causes watchdog timeout when called from UI loop
     outgoingcontrol.esp_sender = M5_ID;
     outgoingcontrol.esp_command = HEARTBEAT;
     outgoingcontrol.esp_value = 0;
@@ -1167,13 +1032,11 @@ LogDebug("Send to Eject - step 1");
           return true;
     } 
     else {
-      delay(20);
-      outgoingcontrol.esp_target = EJECT_ID;
-      esp_err_t result = esp_now_send(EJECT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
-      LogDebug("Sending to eject failed");
+      LogDebug("Heartbeat to eject failed");
       return false;
     }
-
+    */
+    return false;
   }
 
 }
@@ -1230,19 +1093,22 @@ LogDebug("Send to Fist_IT - step 1");
           return true;
     } 
     else {
-      delay(20);
-      outgoingcontrol.esp_target = FIST_ID;
-      esp_err_t result = esp_now_send(FIST_IT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
+      // Fail fast without retry to avoid blocking UI thread
       LogDebug("Sending to Fist_IT failed");
+      // Retry commented out to prevent watchdog timeout - uncomment if needed
+      //outgoingcontrol.esp_target = FIST_ID;
+      //esp_err_t result = esp_now_send(FIST_IT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
       return false;
     }
 
   }
   else{
-    delay(200);
-    LogDebug("Fist_IT was not paired");
+    // Heartbeat removed from UI loop to prevent watchdog timeout
+    // Background task (espNowRemoteTask) handles heartbeats every 5 seconds
+    LogDebug("Fist_IT was not paired - heartbeat handled by background task");
     //CheckAllPeers();
 
+    /* HEARTBEAT COMMENTED OUT - causes watchdog timeout when called from UI loop
     outgoingcontrol.esp_sender = M5_ID;
     outgoingcontrol.esp_command = HEARTBEAT;
     outgoingcontrol.esp_value = 0;
@@ -1255,13 +1121,11 @@ LogDebug("Send to Fist_IT - step 1");
           return true;
     } 
     else {
-      delay(20);
-      outgoingcontrol.esp_target = FIST_ID;
-      esp_err_t result = esp_now_send(FIST_IT_Address, (uint8_t *) &outgoingcontrol, sizeof(outgoingcontrol));
-      LogDebug("Sending to Fist_IT failed");
+      LogDebug("Heartbeat to Fist_IT failed");
       return false;
     }
-
+    */
+    return false;
   }
 
 }
@@ -1293,21 +1157,35 @@ void savesettings(lv_event_t * e)
 
   if(lv_obj_has_state(ui_vibrate, LV_STATE_CHECKED) == 1){
     m5prf.putBool("Vibrate", true); //NSV-storage write true to key "Vibrate"
+    vibrate_mode = true;
 	}else if(lv_obj_has_state(ui_vibrate, LV_STATE_CHECKED) == 0){
+    vibrate_mode = false;
     m5prf.putBool("Vibrate", false);
 	}
 
   if(lv_obj_has_state(ui_lefty, LV_STATE_CHECKED) == 1){
     m5prf.putBool("Lefty", true); // ui_lefty in SL-Studio code is actually Touch-enable toggle
+    touch_home = true;
 	}else if(lv_obj_has_state(ui_lefty, LV_STATE_CHECKED) == 0){
     m5prf.putBool("Lefty", false);
-	}
+    touch_home = false;
+  }
 
 	if(lv_obj_has_state(ui_ejectaddon, LV_STATE_CHECKED) == 1){
     m5prf.putBool("ejectAddon", true);  
+    eject_status = true;
 	}else if(lv_obj_has_state(ui_ejectaddon, LV_STATE_CHECKED) == 0){
     m5prf.putBool("ejectAddon", false);
-	}
+    eject_status = false;
+  }
+
+	if(lv_obj_has_state(ui_Fist_IT_addon, LV_STATE_CHECKED) == 1){
+    m5prf.putBool("Fist-ITAddon", true);  
+    Fist_IT_status = true;
+  }else if(lv_obj_has_state(ui_Fist_IT_addon, LV_STATE_CHECKED) == 0){
+    m5prf.putBool("Fist-ITAddon", false);
+    Fist_IT_status = false;
+  }
 
   //read darkmode saved setting to force reboot for theme change
   bool theme_Change_Previous = false;
@@ -1317,10 +1195,12 @@ void savesettings(lv_event_t * e)
   if(lv_obj_has_state(ui_darkmode, LV_STATE_CHECKED) == 1){
     theme_Change_New = true;
     m5prf.putBool("Darkmode", true);
+    dark_mode = true;
 	}else if(lv_obj_has_state(ui_darkmode, LV_STATE_CHECKED) == 0){
     theme_Change_New = false;
     m5prf.putBool("Darkmode", false);
-	}
+    dark_mode = false;  
+  }
 
   m5prf.end(); //close storage container/session.
   delay(100);
@@ -1330,98 +1210,6 @@ void savesettings(lv_event_t * e)
     ESP.restart(); //reboot is only required to change themes, you don't need to restart for settings to save with NVS.
   }else{
     vibrate(225,75);
-  }
-}
-
-void screenmachineOLD_ONE(lv_event_t * e)
-{
-  if (lv_scr_act() == ui_Start){
-    st_screens = ST_UI_START;
-  } else if (lv_scr_act() == ui_Home){
-    st_screens = ST_UI_HOME;
-    speed = lv_slider_get_value(ui_homespeedslider);
-    LogDebug(speedenc);
-    LogDebug(speed);
-    speedenc =  fscale(0.5, speedlimit, 0, Encoder_MAP, speed, 0);
-    encoder1.setCount(speedenc); 
-    LogDebug(speedenc);
-
-    lv_slider_set_range(ui_homedepthslider, 0, maxdepthinmm);
-    depth = lv_slider_get_value(ui_homedepthslider);       
-    depthenc =  fscale(0, maxdepthinmm, 0, Encoder_MAP, depth, 0);
-    encoder2.setCount(depthenc);
-
-    lv_slider_set_range(ui_homestrokeslider, 0, maxdepthinmm);        
-    stroke = lv_slider_get_value(ui_homestrokeslider);    
-    strokeenc =  fscale(0, maxdepthinmm, 0, Encoder_MAP, stroke, 0);
-    encoder3.setCount(strokeenc);
-
-    sensation = lv_slider_get_value(ui_homesensationslider);
-    sensationenc =  fscale(-100, 100, (Encoder_MAP/2*-1), (Encoder_MAP/2), sensation, 0);
-    encoder4.setCount(sensationenc);        
-            
-  } else if (lv_scr_act() == ui_Menue){
-    st_screens = ST_UI_MENUE;
-  } else if (lv_scr_act() == ui_Pattern){
-    st_screens = ST_UI_PATTERN;
-  } else if (lv_scr_act() == ui_Torqe){
-    st_screens = ST_UI_Torqe;
-    torqe_f = lv_slider_get_value(ui_outtroqeslider);
-    torqe_f_enc = fscale(50, 200, 0, Encoder_MAP, torqe_f, 0);
-    encoder1.setCount(torqe_f_enc);
-
-    torqe_r = lv_slider_get_value(ui_introqeslider);
-    torqe_r_enc = fscale(20, 200, 0, Encoder_MAP, torqe_r, 0);
-    encoder4.setCount(torqe_r_enc);
-
-  } else if (lv_scr_act() == ui_EJECTSettings){
-    st_screens =ST_UI_EJECTSETTINGS;
-    EJECT_speed = lv_slider_get_value(ui_EJECTSPEEDslider);
-    EJECT_s_enc =  fscale(0.5, 500, 0, Encoder_MAP, EJECT_speed, 0);
-    encoder1.setCount(EJECT_s_enc); 
-
-    lv_slider_set_range(ui_EJECTTIMEslider, 0, 61);
-    EJECT_time = lv_slider_get_value(ui_EJECTTIMEslider);       
-    EJECT_t_enc =  fscale(0, 61, 0, Encoder_MAP, EJECT_time, 0);
-    encoder2.setCount(EJECT_t_enc);
-
-    lv_slider_set_range(ui_EJECTSIZEslider, 0, 20);        
-    EJECT_size = lv_slider_get_value(ui_EJECTSIZEslider);
-    EJECT_si_enc =  fscale(0, 20, 0, Encoder_MAP, EJECT_size, 0);
-    encoder3.setCount(EJECT_si_enc);
-
-    lv_slider_set_range(ui_EJECTACCELslider, 0, 20);        
-    EJECT_accel = lv_slider_get_value(ui_EJECTACCELslider);
-    EJECT_accel = fscale(0, (Encoder_MAP), 0, 20, EJECT_a_enc, 0);
-    EJECT_a_enc =  fscale(0, 20, 0, Encoder_MAP, EJECT_accel, 0);
-    encoder4.setCount(EJECT_a_enc);        
-  } else if (lv_scr_act() == ui_Fist_IT_Settings){
-
-    st_screens = ST_UI_Fist_IT_Settings;
-    Fist_IT_speed= lv_slider_get_value(ui_Fist_IT_SPEEDslider);
-    Fist_IT_s_enc =  fscale(0, 100, 0, Encoder_MAP, Fist_IT_speed, 0);
-    encoder1.setCount(Fist_IT_s_enc); 
-
-    lv_slider_set_range(ui_Fist_IT_ROTATIONslider, 0, 360);
-    Fist_IT_rotation = lv_slider_get_value(ui_Fist_IT_ROTATIONslider);       
-    Fist_IT_r_enc =  fscale(0.5, 360, 0, Encoder_MAP, Fist_IT_ROTATION, 0);
-    encoder2.setCount(Fist_IT_r_enc);
-
-    lv_slider_set_range(ui_Fist_IT_PAUSEslider, 0, 100);        
-    Fist_IT_pause = lv_slider_get_value(ui_Fist_IT_PAUSEslider);
-    Fist_IT_p_enc =  fscale(0, 100, 0, Encoder_MAP, Fist_IT_pause, 0);
-    encoder3.setCount(Fist_IT_p_enc);
-
-    Fist_IT_accel = lv_slider_get_value(ui_Fist_IT_ACCELslider);
-    Fist_IT_accel = fscale(0, (Encoder_MAP), 0, 100, Fist_IT_a_enc, 0);
-    Fist_IT_a_enc =  fscale(0, 100, 0, Encoder_MAP, Fist_IT_accel, 0);
-    encoder4.setCount(Fist_IT_a_enc);        
-            
-
-            
-
-  } else if (lv_scr_act() == ui_Settings){
-    st_screens = ST_UI_SETTINGS;
   }
 }
 
@@ -1464,15 +1252,18 @@ void screenmachine(lv_event_t * e)
   }
 }
 
-
 void ejectcreampie(lv_event_t * e){
   LogDebug("EJECTCREAMPIE");
   if(EJECT_On == true){
     SendCumCommand(CUMOFF, 0.0, EJECT_ID);
     lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);
+    lv_label_set_text(ui_EJECTButtonLText, "Cum");   // update label
+    EJECT_On = false;
   } else if(EJECT_On == false){
-    lv_obj_add_state(ui_HomeButtonL, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);
     SendCumCommand(CUMON, 0.0, EJECT_ID);
+    lv_label_set_text(ui_EJECTButtonLText, "Stop");   // update label
+    EJECT_On = true;
 //lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);
   }
 }
@@ -1482,11 +1273,13 @@ void Start_Fist(lv_event_t * e){
   if(FIST_On == true){
     SendFistCommand(FISTOFF, 0.0, FIST_ID);
     FIST_On = false;
+    lv_label_set_text(ui_Fist_IT_ButtonLText, "Start");   // update label
     //    lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);
   } else if(FIST_On == false){
 //    lv_obj_add_state(ui_HomeButtonL, LV_STATE_CHECKED);
     SendFistCommand(FISTON, 0.0, FIST_ID);
     FIST_On = true;
+    lv_label_set_text(ui_Fist_IT_ButtonLText, "Stop");   // update label
 //lv_obj_clear_state(ui_HomeButtonL, LV_STATE_CHECKED);
   }
 }
@@ -1785,32 +1578,36 @@ void loop()
         }
 
 
-        // TRACK CHANGES: Only handle button presses if no rotation detected for that encoder
+        // Check each button independently - not else-if chain to avoid blocking
         if(click2_long_waspressed == true){
          lv_obj_send_event(ui_HomeButtonL, LV_EVENT_LONG_PRESSED, NULL);
          LogDebugPRIO("Home Long Left");
-        } else if(click2_short_waspressed == true){
+        }
+        if(click2_short_waspressed == true){
          lv_obj_send_event(ui_HomeButtonL, LV_EVENT_SHORT_CLICKED, NULL);
          LogDebugPRIO("Home Short Left");
-        } else if(click2_long_waspressed == true){
-          LogDebugPRIO("Home Long Left");
-          lv_obj_send_event(ui_HomeButtonL, LV_EVENT_LONG_PRESSED, NULL);
-        } else if(click2_double_waspressed == true){
+        }
+        if(click2_double_waspressed == true){
           LogDebugPRIO("Home Double Left");
           // what to do when double pressed left button
-        } else if(mxclick_short_waspressed == true){
+        }
+        if(mxclick_short_waspressed == true){
           LogDebugPRIO("Home Short Middle");
           lv_obj_send_event(ui_HomeButtonM, LV_EVENT_SHORT_CLICKED, NULL);
-        } else if(mxclick_long_waspressed == true){
+        }
+        if(mxclick_long_waspressed == true){
           LogDebugPRIO("Home Long Middle");
           lv_obj_send_event(ui_HomeButtonM, LV_EVENT_LONG_PRESSED, NULL);
-        } else if(click3_short_waspressed == true){
+        }
+        if(click3_short_waspressed == true){
           LogDebugPRIO("Home Short Right");
           lv_obj_send_event(ui_HomeButtonR, LV_EVENT_SHORT_CLICKED, NULL);
-        } else if(click3_long_waspressed == true){
+        }
+        if(click3_long_waspressed == true){
           LogDebugPRIO("Home Long Right");
           lv_obj_send_event(ui_HomeButtonR, LV_EVENT_LONG_PRESSED, NULL);
-        } else if(click3_double_waspressed == true){
+        }
+        if(click3_double_waspressed == true){
           if (dynamicStroke == false){
             dynamicStroke = true;;            /// dynamicStroke = !dynamicStroke; crashes M5 for some reason
           }else{
@@ -2044,7 +1841,11 @@ void loop()
         }
         char EJECT_time_v[7];
         dtostrf(EJECT_time, 6, 0, EJECT_time_v);
-        lv_label_set_text(ui_EJECTTIMEvalue, EJECT_time_v);
+        if (EJECT_time > 60) {
+          lv_label_set_text(ui_EJECTTIMEvalue, T_CUM_CONSTANT);
+        } else {
+          lv_label_set_text(ui_EJECTTIMEvalue, EJECT_time_v);
+        }
         
         //
         // Encoder 3 EJECT_size
@@ -2052,18 +1853,18 @@ void loop()
         if(lv_slider_is_dragged(ui_EJECTSIZEslider) == false){ //if knob gets rotated
           changed = false;
 
-          lv_slider_set_value(ui_EJECTSIZEslider, EJECT_time, LV_ANIM_OFF);
+          lv_slider_set_value(ui_EJECTSIZEslider, EJECT_size, LV_ANIM_OFF);
 
 
 		      if (encoder3.getCount() >= 2){      //EJECT_sizeup
             changed = true;
-            EJECT_size-= rampValue;
+            EJECT_size+= rampValue;
             encoder3.setCount(0);
             rampMs = millis();
             encId = 3;
 		      }else if (encoder3.getCount() <= -2){      //EJECT_sizedown
             changed = true;
-            EJECT_size+= rampValue;
+            EJECT_size-= rampValue;
             encoder3.setCount(0);
             rampMs = millis();
             encId = 3;
@@ -2115,13 +1916,14 @@ void loop()
           }
 
           //Stoke min-max bounds
-          if (EJECT_accel < -100){
+          // clamp to slider range 0..max value of slider
+          if (EJECT_accel < 0){
             changed = true;
-            EJECT_accel = -100;
+            EJECT_accel = 0;
           }
-          if (EJECT_accel > 100){
+          if (EJECT_accel > lv_slider_get_max_value(ui_EJECTACCELslider)){
             changed = true;
-            EJECT_accel = 100;
+            EJECT_accel = lv_slider_get_max_value(ui_EJECTACCELslider);
           }
 
           if (changed) {
@@ -2132,17 +1934,20 @@ void loop()
             SendCumCommand(CUMACCEL, EJECT_accel, EJECT_ID);
         }
 
-        // TRACK CHANGES: Only handle button presses if no rotation detected for that encoder
+        // Check each button independently - not else-if chain to avoid blocking MX button
         if(click2_short_waspressed == true){
          lv_obj_send_event(ui_EJECTButtonL, LV_EVENT_SHORT_CLICKED, NULL);
           LogDebugPRIO("EJECT Short Left");
-        } else if(mxclick_short_waspressed == true){
+        }
+        if(mxclick_short_waspressed == true){
          lv_obj_send_event(ui_EJECTButtonM, LV_EVENT_SHORT_CLICKED, NULL);
           LogDebugPRIO("EJECT Short Middle");
-        } else if(click3_short_waspressed == true){
+        }
+        if(click3_short_waspressed == true){
          lv_obj_send_event(ui_EJECTButtonR, LV_EVENT_SHORT_CLICKED, NULL);
           LogDebugPRIO("EJECT Short Right");
-        } else if(click3_long_waspressed == true){
+        }
+        if(click3_long_waspressed == true){
           EJECT_accel = 0;        //reset EJECT_accel to zero
           SendCommand(EJECT_accel, EJECT_accel, OSSM_ID);
           LogDebugPRIO("EJECT Long Right");
@@ -2350,17 +2155,21 @@ void loop()
         if(click2_short_waspressed == true){
           LogDebugPRIO("FIST_IT Short Left");
          lv_obj_send_event(ui_Fist_IT_ButtonL, LV_EVENT_SHORT_CLICKED, NULL);
-        } else if(mxclick_short_waspressed == true){
+        }
+        if(mxclick_short_waspressed == true){
           LogDebugPRIO("FIST_IT Short Middle"); 
          lv_obj_send_event(ui_Fist_IT_ButtonM, LV_EVENT_SHORT_CLICKED, NULL);
-        } else if(click3_short_waspressed == true){
+        }
+        if(click3_short_waspressed == true){
           LogDebugPRIO("FIST_IT Short Right");
          lv_obj_send_event(ui_Fist_IT_ButtonR, LV_EVENT_SHORT_CLICKED, NULL);
-        } else if(click3_long_waspressed == true){
+        }
+        if(click3_long_waspressed == true){
           LogDebugPRIO("FIST_IT Long Right");
           //Fist_IT_ACCEL = 0;        //reset FIST_IT_accel to zero
           SendFistCommand(Fist_IT_ACCEL, Fist_IT_accel, FIST_ID);
-        }else if(click3_double_waspressed == true){
+        }
+        if(click3_double_waspressed == true){
           LogDebugPRIO("FIST_IT Double Right");
 
         }
@@ -2463,7 +2272,7 @@ void espNowRemoteTask(void *pvParameters)
         LogDebug("failed to send heartbeat");
       }
     }
-    delay(200);
+    vTaskDelay(200/portTICK_PERIOD_MS);  // Use vTaskDelay instead of delay() to allow other tasks to run
       if(Eject_paired){
       LogDebug("Heartbeat EJECT");
       outgoingcontrol.esp_command = HEARTBEAT;
@@ -2474,7 +2283,7 @@ void espNowRemoteTask(void *pvParameters)
       //StatusMessageOut();
     }
     
-  delay(200);
+  vTaskDelay(200/portTICK_PERIOD_MS);  // Use vTaskDelay instead of delay() to allow other tasks to run
     if(Fist_IT_paired){
       LogDebug("Heartbeat Fist_IT");
       outgoingcontrol.esp_command = HEARTBEAT;
@@ -2486,7 +2295,7 @@ void espNowRemoteTask(void *pvParameters)
     }
 
     /*
-    delay(200);
+    vTaskDelay(200/portTICK_PERIOD_MS);
     LogDebug("Heartbeat ALL");
     outgoingcontrol.esp_command = HEARTBEAT;
     outgoingcontrol.esp_sender = M5_ID;

@@ -231,26 +231,25 @@ static void ui_event_HomeButtonL(lv_event_t * e)
 {
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
-    if(event == LV_EVENT_LONG_PRESSED) {
-        _ui_screen_change(ui_EJECTSettings, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
-    }    else if(event == LV_EVENT_SHORT_CLICKED){
-        ejectcreampie(e);
+    if(event == LV_EVENT_SHORT_CLICKED){
+        _ui_screen_change(ui_Menue, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
+    } else if(event == LV_EVENT_LONG_PRESSED){
+        if(eject_status){
+          _ui_screen_change(ui_EJECTSettings, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
+        }
     }
 }
 static void ui_event_HomeButtonM(lv_event_t * e)
-{//HIER GAAT HET FOUT
+{
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
-// below is the exact sequence of events when pressing a button in LVGL
-//if any soft of button click, trigger homebuttonmevent
-    //if(event == LV_EVENT_PRESSED||
-    //    event == LV_EVENT_LONG_PRESSED||
-    //    event == LV_EVENT_LONG_PRESSED_REPEAT||
-    //    event == LV_EVENT_RELEASED||
-    //    event == LV_EVENT_SHORT_CLICKED||
-    //    event == LV_EVENT_CLICKED) {
+    
+    // Handle all click types: short, long, and general clicked events
+    if(event == LV_EVENT_SHORT_CLICKED || 
+       event == LV_EVENT_LONG_PRESSED || 
+       event == LV_EVENT_CLICKED) {
         homebuttonmevent(e);
-    //}
+    }
 }
 
 static void ui_event_HomeButtonR(lv_event_t * e)
@@ -258,7 +257,9 @@ static void ui_event_HomeButtonR(lv_event_t * e)
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
     if(event == LV_EVENT_LONG_PRESSED) {
-        _ui_screen_change(ui_Fist_IT_Settings, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
+        if(Fist_IT_status){
+          _ui_screen_change(ui_Fist_IT_Settings, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
+        }
     } else if(event == LV_EVENT_SHORT_CLICKED){
         _ui_screen_change(ui_Pattern, LV_SCR_LOAD_ANIM_FADE_ON, 20, 0);
     }
@@ -421,7 +422,10 @@ static void ui_event_EJECTButtonM(lv_event_t * e)
 {
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
-    if(event == LV_EVENT_SHORT_CLICKED) {
+    // Handle all click types: short, long, and general clicked events
+    if(event == LV_EVENT_SHORT_CLICKED || 
+       event == LV_EVENT_LONG_PRESSED || 
+       event == LV_EVENT_CLICKED) {
         _ui_screen_change(ui_Home, LV_SCR_LOAD_ANIM_FADE_ON, 90, 0);
     }
 }
@@ -786,7 +790,7 @@ void ui_Home_screen_init(void)
 
     lv_obj_set_align(ui_HomeButtonL, LV_ALIGN_CENTER);
 
-    lv_obj_add_state(ui_HomeButtonL, LV_STATE_DISABLED);
+//    lv_obj_add_state(ui_HomeButtonL, LV_STATE_DISABLED);
 
     lv_obj_add_flag(ui_HomeButtonL, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_HomeButtonL, LV_OBJ_FLAG_SCROLLABLE);
@@ -807,7 +811,7 @@ void ui_Home_screen_init(void)
 
     lv_obj_set_align(ui_HomeButtonLText, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_HomeButtonLText, T_CREAMPIE);
+    lv_label_set_text(ui_HomeButtonLText, T_MENUE);
 
     lv_obj_set_style_text_color(ui_HomeButtonLText, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_HomeButtonLText, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -883,7 +887,7 @@ void ui_Home_screen_init(void)
 
     lv_obj_set_style_text_color(ui_HomeButtonRText, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_HomeButtonRText, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_HomeButtonRText, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_text_font(ui_HomeButtonRText, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // ui_SpeedL
 
@@ -2363,7 +2367,7 @@ void ui_EJECTSettings_screen_init(void)
     // ui_EJECTSPEEDslider
 
     ui_EJECTSPEEDslider = lv_slider_create(ui_EJECTSPEEDL);
-    lv_slider_set_range(ui_EJECTSPEEDslider, 0, 500);
+    lv_slider_set_range(ui_EJECTSPEEDslider, 0, 100);
     //lv_slider_set_mode(ui_EJECTSPEEDslider, LV_SLIDER_MODE_SYMMETRICAL);
 
     lv_obj_set_width(ui_EJECTSPEEDslider, 130);
@@ -2523,7 +2527,7 @@ void ui_EJECTSettings_screen_init(void)
     // ui_EJECTACCELslider
 
     ui_EJECTACCELslider = lv_slider_create(ui_EJECTACCELL);
-    lv_slider_set_range(ui_EJECTACCELslider, 0, 20);
+    lv_slider_set_range(ui_EJECTACCELslider, 0, 100);
     lv_slider_set_mode(ui_EJECTACCELslider, LV_SLIDER_MODE_SYMMETRICAL);
 
     lv_obj_set_width(ui_EJECTACCELslider, 170);

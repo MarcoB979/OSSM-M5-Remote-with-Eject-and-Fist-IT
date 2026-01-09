@@ -22,7 +22,7 @@
 #define T_SETUP_DEPTH_I     "Set Depth Interactively"
 #define T_SETUP_DEPTH_F     "Set Depth Fancy"
 #define T_SELECT_PATTERN    "Select Pattern"
-#define T_PATTERN_Button    "Select Pattern \n Menue"
+#define T_PATTERN_Button    "Pattern"
 #define T_RESTART           "Restart"
 #define T_SETUP_TORQE       "Setup Torque"
 #define T_OUT_TORQE         "Outward Torque:"
@@ -50,6 +50,7 @@
 
 #define T_CUM_SPEED         "Speed"
 #define T_CUM_TIME          "Squirts"
+#define T_CUM_CONSTANT      "Const"
 #define T_CUM_Volume        "Volume"
 #define T_CUM_Accel         "Force"
 
